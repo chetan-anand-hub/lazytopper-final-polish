@@ -71,6 +71,19 @@ export default function MePage() {
   const { auth, attemptHistory, lastAttempt, mistakeInsight, setActionSource } = useLazyTopper();
   useEffect(() => { setActionSource("me"); }, [setActionSource]);
 
+  // Hooks must run unconditionally before any early return.
+  const hasAttempts = attemptHistory.length > 0;
+  const scoreTrend = useMemo(() => buildScoreTrend(attemptHistory), [attemptHistory]);
+  const subjectBars = useMemo(() => buildSubjectBars(attemptHistory), [attemptHistory]);
+  const mistakeMix = useMemo(() => buildMistakeMix(attemptHistory), [attemptHistory]);
+  const marksLost = useMemo(() => buildMarksLost(attemptHistory), [attemptHistory]);
+
+  const avgScore = hasAttempts
+    ? Math.round((attemptHistory.reduce((s, a) => s + a.score / a.outOf, 0) / attemptHistory.length) * 100)
+    : 0;
+  const bestPct = hasAttempts ? Math.max(...attemptHistory.map((a) => Math.round((a.score / a.outOf) * 100))) : 0;
+  const totalMistakes = mistakeMix.reduce((s, m) => s + m.value, 0);
+
   if (auth === "logged-out") {
     return (
       <div className="space-y-5">
@@ -90,17 +103,6 @@ export default function MePage() {
   }
 
   // Trial-active.
-  const hasAttempts = attemptHistory.length > 0;
-  const scoreTrend = useMemo(() => buildScoreTrend(attemptHistory), [attemptHistory]);
-  const subjectBars = useMemo(() => buildSubjectBars(attemptHistory), [attemptHistory]);
-  const mistakeMix = useMemo(() => buildMistakeMix(attemptHistory), [attemptHistory]);
-  const marksLost = useMemo(() => buildMarksLost(attemptHistory), [attemptHistory]);
-
-  const avgScore = hasAttempts
-    ? Math.round((attemptHistory.reduce((s, a) => s + a.score / a.outOf, 0) / attemptHistory.length) * 100)
-    : 0;
-  const bestPct = hasAttempts ? Math.max(...attemptHistory.map((a) => Math.round((a.score / a.outOf) * 100))) : 0;
-  const totalMistakes = mistakeMix.reduce((s, m) => s + m.value, 0);
 
   return (
     <div className="space-y-5">
